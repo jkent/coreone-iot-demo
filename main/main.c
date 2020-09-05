@@ -4,7 +4,6 @@
 
 #include <esp_event.h>
 #include <esp_log.h>
-#include <esp_sntp.h>
 #include <esp_spiffs.h>
 #include <esp_wifi.h>
 #include <nvs_flash.h>
@@ -37,7 +36,6 @@
 
 const char TAG[] = "main";
 
-static void obtain_time(void);
 static void main_task(void *pArgument);
 
 int RunShadowDemo( bool awsIotMqttMode,
@@ -89,25 +87,7 @@ void app_main(void)
 
     assert((bits & WIFI_STA_CONNECTED_BIT) != 0);
 
-    obtain_time();
-
     xTaskCreate(main_task, "main_task", 4096, NULL, tskIDLE_PRIORITY + 1, NULL);
-}
-
-
-static void obtain_time(void)
-{
-    sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "pool.ntp.org");
-    sntp_init();
-
-    int retry = 0;
-    const int retry_count = 10;
-
-    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
-        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-    }
 }
 
 
